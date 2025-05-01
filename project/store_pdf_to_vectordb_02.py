@@ -14,7 +14,7 @@ pdf_files = glob(os.path.join("data", "*.pdf"))
 print(pdf_files)
 print("*" * 100)
 
-pdf_file = pdf_files[0] # "data/개인정보 보호법(법률)(제19234호)(20240315).pdf"
+pdf_file = pdf_files[1] # "data/근로기준법(법률)(제18176호)(20211119).pdf"
 
 loader = PyPDFLoader(pdf_file)
 pages = loader.load()
@@ -68,7 +68,7 @@ def parse_law(law_text):
 # 각 페이지의 텍스트를 결합하여 재분리
 file_text = "\n".join([p.page_content for p in pages])
 
-text_for_delete = r"법제처\s+\d+\s+국가법령정보센터\n개인정보 보호법"
+text_for_delete = r"법제처\s+\d+\s+국가법령정보센터\n근로기준법"
 law_text = "\n".join([re.sub(text_for_delete, "", p.page_content).strip() for p in pages])
 parsed_law = parse_law(law_text)
 
@@ -87,7 +87,7 @@ for law in parsed_law["장"].keys():
         metadata = {
             "source": pdf_file,
             "chapter": law,
-            "name": "개인정보 보호법"
+            "name": "근로기준법"
         }
 
         #metadata 내용을 본문에 추가
@@ -123,9 +123,9 @@ print("*" * 100)
 embeddings_model = OllamaEmbeddings(model="bge-m3")
 
 #Chroma 인덱스 생성
-personal_db = Chroma.from_documents(
+labor_db = Chroma.from_documents(
     documents=final_docs,
     embedding=embeddings_model,
-    collection_name="personal_law",
+    collection_name="labor_law",
     persist_directory="./chroma_db"
 )

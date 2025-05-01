@@ -14,7 +14,7 @@ pdf_files = glob(os.path.join("data", "*.pdf"))
 print(pdf_files)
 print("*" * 100)
 
-pdf_file = pdf_files[0] # "data/개인정보 보호법(법률)(제19234호)(20240315).pdf"
+pdf_file = pdf_files[2] # "data/주택임대차보호법(법률)(제19356호)(20230719).pdf"
 
 loader = PyPDFLoader(pdf_file)
 pages = loader.load()
@@ -47,53 +47,51 @@ def parse_law(law_text):
         appendix = appendix.group(1)
 
     # 파싱 결과를 저장할 딕셔너리 초기화
-    parsed_law = {'서문': preamble, '장': {}, '부칙': appendix}
+    parsed_law = {'서문': preamble, '부칙': appendix}
 
-    # 각 장 내에서 조 분리
-    for chapter_title, chapter_content in chapters:
-        # 조 분리 패턴
-        # 1. '제X조'로 시작 ('제X조의Y' 형식도 가능)
-        # 2. 조 번호 뒤에 반드시 '(항목명)' 형식의 제목이 와야 함
-        # 3. 다음 조가 시작되기 전까지 또는 문서의 끝까지의 모든 내용을 포함
-        article_pattern = r'(제\d+조(?:의\d+)?\s*\([^)]+\).*?)(?=제\d+조(?:의\d+)?\s*\([^)]+\)|$)'
 
-        #정규표현식을 이용해 모든 조항을 탐색
-        articles = re.findall(article_pattern, chapter_content, re.DOTALL)
+    #조 분리 패턴
+    article_pattern = r'(제\d+조(?:의\d+)?\s*\([^)]+\).*?)(?=제\d+조(?:의\d+)?\s*\([^)]+\)|$)'
 
-        # 각 조항의 앞뒤 공백을 제거하고 결과 딕셔너리에 저장
-        parsed_law['장'][chapter_title.strip()] = [article.strip() for article in articles]
+    if chapters: # 장이 있는 경우
+        parsed_law['장'] = {}
+        for chapter_title, chapter_content in chapters:
+            articles = re.findall(article_pattern, chapter_content, re.DOTALL)
+            parsed_law['장'][chapter_title.strip()] = [article.strip() for article in articles]
+    else: # 장이 없는 경우
+        # 서문과 부칙을 제외한 본문에서 조문 추출
+        main_text = re.sub(preamble_pattern, "", law_text, flags=re.DOTALL)
+        main_text = re.sub(appendix_pattern, "", main_text, flags=re.DOTALL)
+        articles = re.findall(article_pattern, main_text, re.DOTALL)
+        parsed_law["조문"] = [article.strip() for article in articles]
 
     return parsed_law
 
 # 각 페이지의 텍스트를 결합하여 재분리
 file_text = "\n".join([p.page_content for p in pages])
 
-text_for_delete = r"법제처\s+\d+\s+국가법령정보센터\n개인정보 보호법"
+text_for_delete = r"법제처\s+\d+\s+국가법령정보센터\n주택임대차보호법"
 law_text = "\n".join([re.sub(text_for_delete, "", p.page_content).strip() for p in pages])
 parsed_law = parse_law(law_text)
 
 # 분할된 아이템 개수 확인
-print(len(parsed_law["장"]))
-print("*" * 100)
-pprint(parsed_law["장"])
+print(len(parsed_law["조문"]))
 print("*" * 100)
 
 # Document 객체에 메타데이터와 함께 정리
 final_docs = []
-for law in parsed_law["장"].keys():
-    for article in parsed_law["장"][law]:
+for article in parsed_law["조문"]:
 
-        # metadata 내용을 정리
-        metadata = {
-            "source": pdf_file,
-            "chapter": law,
-            "name": "개인정보 보호법"
-        }
+    # metadata 내용을 정리
+    metadata = {
+        "source": pdf_file,
+        "name": "주택임대차보호법"
+    }
 
-        #metadata 내용을 본문에 추가
-        content = f"[법률정보]\n다음 조항은 {metadata['name']} {metadata['chapter']}에서 발췌한 내용입니다.\n\n[법률조항]\n{article}"
+    #metadata 내용을 본문에 추가
+    content = f"[법률정보]\n다음 조항은 {metadata['name']}에서 발췌한 내용입니다.\n\n[법률조항]\n{article}"
 
-        final_docs.append(Document(page_content=content, metadata=metadata))
+    final_docs.append(Document(page_content=content, metadata=metadata))
 
 
 print(len(final_docs))
@@ -105,10 +103,10 @@ print("*" * 100)
 print(final_docs[0].metadata)
 print("*" * 100)
 
-print(final_docs[1].page_content)
+print(final_docs[-1].page_content)
 print("*" * 100)
 
-print(final_docs[1].metadata)
+print(final_docs[-1].metadata)
 print("*" * 100)
 
 
@@ -123,9 +121,9 @@ print("*" * 100)
 embeddings_model = OllamaEmbeddings(model="bge-m3")
 
 #Chroma 인덱스 생성
-personal_db = Chroma.from_documents(
+housing_db = Chroma.from_documents(
     documents=final_docs,
     embedding=embeddings_model,
-    collection_name="personal_law",
+    collection_name="housing_law",
     persist_directory="./chroma_db"
 )
