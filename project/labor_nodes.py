@@ -1,19 +1,19 @@
 from typing import Literal
-from common import personal_law_search, llm, ExtractedInformation, RefinedQuestion
-from personal_models import PersonalRagState
+from common import labor_law_search, llm, ExtractedInformation, RefinedQuestion
+from labor_models import LaborRagState
 from langchain.prompts import ChatPromptTemplate
 
-def retrieve_documents(state: PersonalRagState) -> PersonalRagState:
+def retrieve_documents(state: LaborRagState) -> LaborRagState:
     print("--- 문서 검색---")
     query = state.get("rewritten_query", state["question"])
-    docs = personal_law_search.invoke(query)
+    docs = labor_law_search.invoke(query)
     return {"documents": docs}
 
-def extract_and_evaluate_information(state: PersonalRagState) -> PersonalRagState:
-    print("--- 정보 추출 및 평가 ---")
+def extract_and_evaluate_information(state: LaborRagState) -> LaborRagState:
+    print("--- 정보 추출 및 평가---")
     extracted_strips = []
     extract_prompt = ChatPromptTemplate.from_messages([
-        ("system", """당신은 개인정보보호법 전문가입니다. 주어진 문서에서 질문과 관련된 주요 사실과 정보를 3~5개 정도 추출하세요.
+        ("system", """당신은 근로기준법 전문가입니다. 주어진 문서에서 질문과 관련된 주요 사실과 정보를 3~5개 정도 추출하세요.
         각 추출된 정보에 대해 다음 두 가지 측면을 0에서 1 사이로 점수로 평가하세요:
         1. 질문과의 관련성
         2. 답변의 충실성 (질문에 대한 완전하고 정확한 답변을 제공할 수 있는 정도)
@@ -50,11 +50,11 @@ def extract_and_evaluate_information(state: PersonalRagState) -> PersonalRagStat
         "num_generations": state.get("num_generations", 0) + 1,
     }
 
-def rewrite_query(state: PersonalRagState) -> PersonalRagState:
+def rewrite_query(state: LaborRagState) -> LaborRagState:
     print("--- 쿼리 재작성---")
 
     rewrite_prompt = ChatPromptTemplate.from_messages([
-        ("system", """당신은 개인정보보호법 전문가입니다. 주어진 원래 질문과 추출된 정보를 바탕으로, 더 관련성 있고 충실한 정보를 찾기 위해 검색 쿼리를 개선해주세요.
+        ("system", """당신은 근로기준법 전문가입니다. 주어진 원래 질문과 추출된 정보를 바탕으로, 더 관련성 있고 충실한 정보를 찾기 위해 검색 쿼리를 개선해주세요.
 
         다음 사항을 고려하여 검색 쿼리를 개선하세요:
         1. 원래 질문의 핵심 요소
@@ -65,7 +65,7 @@ def rewrite_query(state: PersonalRagState) -> PersonalRagState:
         개선된 검색 쿼리 작성 단계:
         1. 2~3개의 검색 쿼리를 제안하세요.
         2. 각 쿼리는 구체적이고 간결해야 합니다.(5-10 단어 사이).
-        3. 개인정보보호법과 관련된 전문 용어를 적절히 활용하세요.
+        3. 근로기준법과 관련된 전문 용어를 적절히 활용하세요.
         4. 각 쿼리 뒤에는 해당 쿼리를 제안한 이유를 간단히 설명하세요.
 
         출력 형식:
@@ -91,18 +91,18 @@ def rewrite_query(state: PersonalRagState) -> PersonalRagState:
 
     return {"rewritten_query": response.question_refined}
 
-def generate_node_answer(state: PersonalRagState) -> PersonalRagState:
+def generate_node_answer(state: LaborRagState) -> LaborRagState:
     print("---답변 생성---")
 
     answer_prompt = ChatPromptTemplate.from_messages([
-        ("system", """당신은 개인정보보호법 전문가입니다. 주어진 질문과 추출된 정보를 바탕으로 답변을 생성해주세요.
+        ("system", """당신은 근로기준법 전문가입니다. 주어진 질문과 추출된 정보를 바탕으로 답변을 생성해주세요.
         답변은 마크다운 형식으로 작성하며, 각 정보의 출처를 명확히 표시해야 합니다.
         답변 구조:
         1. 질문에 대한 직접적인 답변
         2. 관련 법률 조항 및 해석
         3. 추가 설명 또는 예시 (필요한 경우)
         4. 결론 및 요약
-        각 섹션에서 사용된 정보의 출처를 괄호 안에 명시하세요. 예: (출처: 개인정보보호법 제15조)"""),
+        각 섹션에서 사용된 정보의 출처를 괄호 안에 명시하세요. 예: (출처: 근로기준법 제15조)"""),
         ("human", "질문: {question}\n\n추출된 정보:\n{extracted_info}\n\n위 지침에 따라 최종 답변을 작성해주세요.")
     ])
 
@@ -115,7 +115,7 @@ def generate_node_answer(state: PersonalRagState) -> PersonalRagState:
 
     return {"node_answer": node_answer.content}
 
-def should_continue(state: PersonalRagState) -> Literal["계속", "종료"]:
+def should_continue(state: LaborRagState) -> Literal["계속", "종료"]:
     if state["num_generations"] >= 2:
         return "종료"
     if len(state["extracted_info"]) >= 1:

@@ -1,10 +1,10 @@
 from pprint import pprint
-from personal_models import PersonalRagState
-from personal_nodes import retrieve_documents, extract_and_evaluate_information, rewrite_query, generate_node_answer, should_continue
+from labor_models import LaborRagState
+from labor_nodes import retrieve_documents, extract_and_evaluate_information, rewrite_query, generate_node_answer, should_continue
 from langgraph.graph import StateGraph, START, END
 
 # 그래프 생성
-workflow = StateGraph(PersonalRagState)
+workflow = StateGraph(LaborRagState)
 
 # 노드 추가
 workflow.add_node("retrieve", retrieve_documents)
@@ -47,4 +47,4 @@ def test(question):
 
     print(value['node_answer'])
 
-# test({"question": "개인정보 처리에 대한 동의를 받을 때 주의해야 할 점은 무엇인가요?"})
+# test({"question": "근로계약 체결할 때 주의해야 할 점은 무엇인가요?"})
