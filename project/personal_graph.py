@@ -1,6 +1,6 @@
 from pprint import pprint
-from personal_corrective_rag_models import PersonalRagState
-from personal_corrective_rag_nodes import retrieve_documents, extract_and_evaluate_information, rewrite_query, generate_node_answer, should_continue
+from personal_models import PersonalRagState
+from personal_nodes import retrieve_documents, extract_and_evaluate_information, rewrite_query, generate_node_answer, should_continue
 from langgraph.graph import StateGraph, START, END
 
 # 그래프 생성

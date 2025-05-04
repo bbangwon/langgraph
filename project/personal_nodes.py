@@ -1,6 +1,6 @@
-from law_tools import personal_law_search, llm
-from personal_corrective_rag_models import PersonalRagState, ExtractedInformation, RefinedQuestion
 from typing import Literal
+from common import personal_law_search, llm, ExtractedInformation, RefinedQuestion
+from personal_models import PersonalRagState
 from langchain.prompts import ChatPromptTemplate
 
 def retrieve_documents(state: PersonalRagState) -> PersonalRagState:
