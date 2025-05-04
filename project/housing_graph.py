@@ -29,16 +29,16 @@ workflow.add_edge("rewrite_query", "retrieve")
 workflow.add_edge("generate_answer", END)
 
 # 그래프 컴파일
-personal_law_agent = workflow.compile()
+housing_law_agent = workflow.compile()
 
 # 그래프 시각화 (png 파일로 저장하여 확인)
-# png_data = personal_law_agent.get_graph(xray=True).draw_mermaid_png()
+# png_data = housing_law_agent.get_graph(xray=True).draw_mermaid_png()
 
 # with open("stategraph.png", "wb") as f:
 #     f.write(png_data)
 
 def test(question):
-    for output in personal_law_agent.stream(question):
+    for output in housing_law_agent.stream(question):
         for key, value in output.items():
             #노드 출력
             pprint(f"Node: '{key}':")

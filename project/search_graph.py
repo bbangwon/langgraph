@@ -29,16 +29,16 @@ workflow.add_edge("rewrite_query", "retrieve")
 workflow.add_edge("generate_answer", END)
 
 # 그래프 컴파일
-personal_law_agent = workflow.compile()
+search_law_agent = workflow.compile()
 
 # 그래프 시각화 (png 파일로 저장하여 확인)
-# png_data = personal_law_agent.get_graph(xray=True).draw_mermaid_png()
+# png_data = search_law_agent.get_graph(xray=True).draw_mermaid_png()
 
 # with open("stategraph.png", "wb") as f:
 #     f.write(png_data)
 
 def test(question):
-    for output in personal_law_agent.stream(question):
+    for output in search_law_agent.stream(question):
         for key, value in output.items():
             #노드 출력
             pprint(f"Node: '{key}':")
@@ -47,4 +47,4 @@ def test(question):
 
     print(value['node_answer'])
 
-test({"question": "대리인과 아파트 임대차 계약을 체결할 때 주의해야 할 점은 무엇인가요?"})
+# test({"question": "대리인과 아파트 임대차 계약을 체결할 때 주의해야 할 점은 무엇인가요?"})
